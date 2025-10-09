@@ -8,6 +8,7 @@ const SCORE_APP_EVENTS = {
 }
 const SCORE_APP_TYPES = {
 	SIREN: 'siren',
+	RULE_BREAKER: 'rule-breaker',
 }
 
 class WebsocketInstance extends InstanceBase {
@@ -61,6 +62,7 @@ class WebsocketInstance extends InstanceBase {
 			{ name: 'Timestamp when last data was received', variableId: 'lastDataReceived' },
 			{ name: 'Socket.IO connection status', variableId: 'connectionStatus' },
 			{ name: 'Timestamp from latest siren event', variableId: 'dataSiren' },
+			{ name: 'Rule breaker', variableId: 'dataRuleBreaker' },
 		]
 		variables.forEach((variable) => {
 			variableDefinitions.push({
@@ -119,13 +121,13 @@ class WebsocketInstance extends InstanceBase {
 	setupWebSocketConnectionListener() {
 		this.socket.on('connect', () => {
 			this.updateStatus(InstanceStatus.Ok)
-			this.setVariableValues({ connection_status: 'Connected' })
+			this.setVariableValues({ connectionStatus: 'Connected' })
 			this.logMessage('Connected to websocket server', 'debug')
 			this.joinedRooms.forEach((room) => this.joinRoom(room))
 		})
 		this.socket.on('disconnect', () => {
 			this.updateStatus(InstanceStatus.Disconnected, `Connection disconnected`)
-			this.setVariableValues({ connection_status: 'Disconnected' })
+			this.setVariableValues({ connectionStatus: 'Disconnected' })
 			this.logMessage('Disconnected from websocket server', 'debug')
 		})
 
@@ -156,6 +158,10 @@ class WebsocketInstance extends InstanceBase {
 					case SCORE_APP_TYPES.SIREN:
 						this.logMessage(`Set dataSiren to ${Date.now()}`, 'debug')
 						this.setVariableValues({ dataSiren: Date.now() })
+						break
+					case SCORE_APP_TYPES.RULE_BREAKER:
+						this.logMessage(`Set dataRuleBreaker to ${Date.now()}`, 'debug')
+						this.setVariableValues({ dataRuleBreaker: data })
 						break
 				}
 
