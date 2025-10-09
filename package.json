@@ -1,0 +1,26 @@
+{
+	"name": "ethlete-score-companion",
+	"version": "0.0.1",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"format": "prettier -w ."
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@companion-module/base": "~1.12.0",
+		"object-path": "^0.11.8",
+		"socket.io-client": "^4.8.1",
+		"ws": "^8.18.2"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ethlete-io/companion-module-socket-io.git"
+	},
+	"devDependencies": {
+		"@companion-module/tools": "^2.3.0"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"packageManager": "yarn@4.10.3"
+}

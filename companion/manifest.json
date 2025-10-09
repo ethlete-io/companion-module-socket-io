@@ -1,0 +1,25 @@
+{
+	"id": "ethlete-score-companion",
+	"name": "ethlete-score-companion",
+	"shortname": "ethlete-score",
+	"description": "ethlete-score-companion",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repository": "git+https://github.com/ethlete-io/companion-module-socket-io.git",
+	"bugs": "https://github.com/ethlete-io/companion-module-socket-io/issues",
+	"maintainers": [
+		{
+			"name": "Felix Baltruschat"
+		}
+	],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../main.js"
+	},
+	"manufacturer": "Braune Digital",
+	"products": ["Ethlete Score App"],
+	"keywords": ["Ethlete", "Score", "Socket.IO"]
+}
