@@ -8,13 +8,13 @@ const SCORE_APP_EVENTS = {
 }
 const SCORE_APP_TYPES = {
 	SIREN: 'siren',
-	RULE_BREAKER: 'rule-breaker',
+	RULEBREAKER: 'rulebreaker',
 }
 
 class WebsocketInstance extends InstanceBase {
 	isInitialized = false
 
-	urlRegex = new RegExp(/^https?:\/\/\w+(\.\w+)*(:[0-9]+)?\/?(\/[.\w]*)*$/)
+	urlRegex = new RegExp(/^https?:\/\/[\w-]+(\.[\w-]+)*(:[0-9]+)?\/?(\/[.\w-]*)*$/)
 
 	isConnected = false
 	socket = null
@@ -24,8 +24,9 @@ class WebsocketInstance extends InstanceBase {
 		this.config = config
 
 		const url = this.config.url
-		if (!url || !url.match(this.urlRegex)) {
-			this.updateStatus(InstanceStatus.BadConfig, `URL is not defined or invalid`)
+		this.logMessage(`URL: ${url}`, 'debug')
+		if (!url || !url.trim().match(this.urlRegex)) {
+			this.updateStatus(InstanceStatus.BadConfig, `Socket.IO URL is not defined or invalid`)
 			return
 		}
 
@@ -62,7 +63,8 @@ class WebsocketInstance extends InstanceBase {
 			{ name: 'Timestamp when last data was received', variableId: 'lastDataReceived' },
 			{ name: 'Socket.IO connection status', variableId: 'connectionStatus' },
 			{ name: 'Timestamp from latest siren event', variableId: 'dataSiren' },
-			{ name: 'Rule breaker', variableId: 'dataRuleBreaker' },
+			{ name: 'Active Rule Breaker', variableId: 'dataActiveRuleBreaker' },
+			{ name: 'Timestamp from latest rule breaker end event', variableId: 'dataLatestRuleBreakerEndTimestamp' },
 		]
 		variables.forEach((variable) => {
 			variableDefinitions.push({
@@ -74,9 +76,20 @@ class WebsocketInstance extends InstanceBase {
 	}
 
 	initWebSocket = () => {
-		this.socket = io(this.config.url, {
+		const rawUrl = this.config.url
+		if (!rawUrl || !rawUrl.trim().match(this.urlRegex)) {
+			this.updateStatus(InstanceStatus.BadConfig, `Socket.IO URL is not defined or invalid`)
+			return
+		}
+
+		const parsed = new URL(rawUrl.trim())
+		const url = `${parsed.protocol}//${parsed.host}`
+		const path = parsed.pathname && parsed.pathname !== '/' ? parsed.pathname : null
+
+		this.socket = io(url, {
 			withCredentials: true,
 			autoConnect: false,
+			...(path ? { path } : {}),
 		})
 
 		this.socket.connect()
@@ -132,7 +145,7 @@ class WebsocketInstance extends InstanceBase {
 		})
 
 		this.socket.io.on('reconnect_attempt', () =>
-			this.logMessage('Attempting to reconnect to websocket server', 'debug')
+			this.logMessage('Attempting to reconnect to websocket server', 'debug'),
 		)
 		this.socket.io.on('reconnect_failed', () => this.logMessage('Failed to reconnect to websocket server', 'error'))
 		this.socket.on('error', () => this.logMessage('Error occurred in websocket server', 'error'))
@@ -150,8 +163,8 @@ class WebsocketInstance extends InstanceBase {
 		try {
 			const { event, type, data } = JSON.parse(message)
 
-			this.logMessage(`Socket Event received: ${event} ${SCORE_APP_EVENTS.SCORE_EVENT}`, 'debug')
-			this.logMessage(`Socket Type received: ${type} ${SCORE_APP_TYPES.SIREN}`, 'debug')
+			this.logMessage(`Socket Event received: ${event}`, 'debug')
+			this.logMessage(`Socket Type received: ${type}`, 'debug')
 
 			if (event === SCORE_APP_EVENTS.SCORE_EVENT) {
 				switch (type) {
@@ -159,9 +172,16 @@ class WebsocketInstance extends InstanceBase {
 						this.logMessage(`Set dataSiren to ${Date.now()}`, 'debug')
 						this.setVariableValues({ dataSiren: Date.now() })
 						break
-					case SCORE_APP_TYPES.RULE_BREAKER:
-						this.logMessage(`Set dataRuleBreaker to ${Date.now()}`, 'debug')
-						this.setVariableValues({ dataRuleBreaker: data })
+					case SCORE_APP_TYPES.RULEBREAKER:
+						this.logMessage(`Set dataRuleBreaker to ${JSON.stringify(data)}`, 'debug')
+						if (data.end) {
+							this.setVariableValues({
+								dataActiveRuleBreaker: data.rulebreaker,
+								dataLatestRuleBreakerEndTimestamp: data.end,
+							})
+						} else {
+							this.setVariableValues({ dataActiveRuleBreaker: data.rulebreaker })
+						}
 						break
 				}
 
