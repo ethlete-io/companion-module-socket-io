@@ -8,6 +8,7 @@ const SCORE_APP_EVENTS = {
 }
 const SCORE_APP_TYPES = {
 	SIREN: 'siren',
+	SHOTCLOCK: 'shotclock',
 	RULEBREAKER: 'rulebreaker',
 }
 
@@ -63,8 +64,10 @@ class WebsocketInstance extends InstanceBase {
 			{ name: 'Timestamp when last data was received', variableId: 'lastDataReceived' },
 			{ name: 'Socket.IO connection status', variableId: 'connectionStatus' },
 			{ name: 'Timestamp from latest siren event', variableId: 'dataSiren' },
-			{ name: 'Active Rule Breaker', variableId: 'dataActiveRuleBreaker' },
-			{ name: 'Timestamp from latest rule breaker end event', variableId: 'dataLatestRuleBreakerEndTimestamp' },
+			{ name: 'Timestamp from latest shotclock siren event', variableId: 'dataShotclockSiren' },
+			{ name: 'Active Rulebreaker', variableId: 'dataActiveRuleBreaker' },
+			{ name: 'Active Rulebreaker Home/Away Side', variableId: 'dataActiveRuleBreakerSide' },
+			{ name: 'Timestamp from latest rulebreaker end event', variableId: 'dataLatestRuleBreakerEndTimestamp' },
 		]
 		variables.forEach((variable) => {
 			variableDefinitions.push({
@@ -172,17 +175,20 @@ class WebsocketInstance extends InstanceBase {
 						this.logMessage(`Set dataSiren to ${Date.now()}`, 'debug')
 						this.setVariableValues({ dataSiren: Date.now() })
 						break
+					case SCORE_APP_TYPES.SHOTCLOCK:
+						this.logMessage(`Set dataShotclockSiren to ${Date.now()}`, 'debug')
+						this.setVariableValues({ dataShotclockSiren: Date.now() })
+						break
 					case SCORE_APP_TYPES.RULEBREAKER:
 						this.logMessage(`Set dataRuleBreaker to ${JSON.stringify(data)}`, 'debug')
-						if (data.end) {
-							this.setVariableValues({
-								dataActiveRuleBreaker: data.rulebreaker,
-								dataLatestRuleBreakerEndTimestamp: data.end,
-							})
-						} else {
-							this.setVariableValues({ dataActiveRuleBreaker: data.rulebreaker })
-						}
+						this.setVariableValues({
+							dataActiveRuleBreaker: data.rulebreaker ?? null,
+							dataLatestRuleBreakerEndTimestamp: data.end ?? null,
+							dataActiveRuleBreakerSide: data.side ?? null,
+						})
 						break
+					default:
+						this.logMessage(`Event type ${type} not defined.`, 'error')
 				}
 
 				return

@@ -1,6 +1,6 @@
 {
 	"name": "ethlete-score-companion",
-	"version": "0.0.2",
+	"version": "0.0.4",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
