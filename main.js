@@ -65,6 +65,8 @@ class WebsocketInstance extends InstanceBase {
 			{ name: 'Socket.IO connection status', variableId: 'connectionStatus' },
 			{ name: 'Timestamp from latest siren event', variableId: 'dataSiren' },
 			{ name: 'Timestamp from latest shotclock siren event', variableId: 'dataShotclockSiren' },
+			{ name: 'Shortclock State -> stopped, running, null', variableId: 'dataShotclockState' },
+			{ name: 'Timestamp from 5 seconds shotclock countdown event', variableId: 'dataShotclockFiveSeconds' },
 			{ name: 'Active Rulebreaker', variableId: 'dataActiveRuleBreaker' },
 			{ name: 'Active Rulebreaker Home/Away Side', variableId: 'dataActiveRuleBreakerSide' },
 			{ name: 'Timestamp from latest rulebreaker end event', variableId: 'dataLatestRuleBreakerEndTimestamp' },
@@ -177,7 +179,19 @@ class WebsocketInstance extends InstanceBase {
 						break
 					case SCORE_APP_TYPES.SHOTCLOCK:
 						this.logMessage(`Set dataShotclockSiren to ${Date.now()}`, 'debug')
-						this.setVariableValues({ dataShotclockSiren: Date.now() })
+
+						if ('end' in data) {
+							this.setVariableValues({ dataShotclockSiren: Date.now(), dataShotclockState: null })
+						}
+
+						if ('state' in data) {
+							this.setVariableValues({ dataShotclockState: data.state })
+						}
+
+						if ('fiveSeconds' in data) {
+							this.setVariableValues({ dataShotclockFiveSeconds: Date.now() })
+						}
+
 						break
 					case SCORE_APP_TYPES.RULEBREAKER:
 						this.logMessage(`Set dataRuleBreaker to ${JSON.stringify(data)}`, 'debug')
